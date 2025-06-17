@@ -1,138 +1,150 @@
-import { Alert, Text, TouchableOpacity, View, Linking, StyleSheet } from "react-native";
+import { Alert, Text, TouchableOpacity, View, Linking } from "react-native";
+
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+
 import _contato from "../types/contato";
+
 import { SQLiteDatabase } from "expo-sqlite";
+
+import * as SQLite from 'expo-sqlite';
+
 import { useNavigation } from "@react-navigation/native";
-import React from "react"; 
 
-type PropsContato = {
-    dados: _contato;
-    db: SQLiteDatabase;
-    recarregar: () => Promise<void> | void; 
-};
 
-function Contato({ dados, db, recarregar }: PropsContato) {
+type _propsContato = {
 
-    const navigation = useNavigation();
-     
+    dados: _contato,
 
-    const deletar = () => {
-        Alert.alert(
-            "Confirmar exclusão",
-            `Deseja realmente excluir o contato "${dados.nome}"?`,
-            [
-                { text: "Cancelar", style: "cancel" },
-                {
-                    text: "Sim, excluir",
-                    style: "destructive",
-                    onPress: async () => {
-                        // 3. LÓGICA DE TRATAMENTO DE ERROS NA EXCLUSÃO
-                        try {
-                            await db.runAsync(`DELETE FROM contatos WHERE id = ?`, dados.id);
-                            await recarregar(); // Recarrega a lista na tela principal
-                        } catch (error) {
-                            console.error("Falha ao deletar o contato:", error);
-                            Alert.alert("Erro", "Não foi possível excluir o contato.");
-                        }
-                    }
-                }
-            ]
-        );
-    };
+    db: SQLiteDatabase,
 
-    const ligar = () => {
-        const url = `tel:${dados.numero}`;
-        Linking.canOpenURL(url)
-            .then(supported => {
-                if (supported) {
-                    return Linking.openURL(url);
-                } else {
-                    Alert.alert("Aviso", "Não é possível realizar chamadas a partir deste dispositivo.");
-                }
-            })
-            .catch(err => {
-                console.error('Ocorreu um erro ao tentar ligar:', err);
-                Alert.alert("Erro", "Não foi possível iniciar a chamada.");
-            });
-    };
+    recarregar: any
 
-    const editar = () => {
-        navigation.navigate('TelaEditar', {
-            dados: dados,
-            db: db,
-            recarregar: recarregar
-        });
-    };
-
-    return (
-        <View style={styles.card}>
-            <View style={styles.infoContainer}>
-                <Text style={styles.nome}>{dados.nome}</Text>
-                <Text style={styles.numero}>{dados.numero}</Text>
-            </View>
-
-            <View style={styles.actionsContainer}>
-                {/* Botão de Ligar */}
-                <TouchableOpacity style={[styles.button, styles.ligarButton]} onPress={ligar}>
-                    <FontAwesome name="phone" size={20} color="white" />
-                </TouchableOpacity>
-                {/* Botão de Editar */}
-                <TouchableOpacity style={[styles.button, styles.iconButton]} onPress={editar}>
-                    <FontAwesome name="pencil" size={20} color="#333" />
-                </TouchableOpacity>
-                {/* Botão de Deletar */}
-                <TouchableOpacity style={[styles.button, styles.iconButton]} onPress={deletar}>
-                    <FontAwesome name="trash" size={20} color="#E53935" />
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
 }
 
-export default React.memo(Contato);
 
-const styles = StyleSheet.create({
-    card: {
-        flexDirection: 'row',
-        width: '100%',
-        padding: 15,
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-        borderRadius: 12,
-        marginBottom: 10,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-    },
-    infoContainer: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    nome: {
-        fontFamily: 'Poppins-Bold',
-        fontSize: 16,
-        color: '#333',
-    },
-    numero: {
-        fontFamily: 'Poppins-Regular',
-        fontSize: 14,
-        color: '#666',
-    },
-    actionsContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        gap: 12,
-    },
-    button: {
-        padding: 8,
-        borderRadius: 20, // Círculo
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    ligarButton: {
-        backgroundColor: '#25D366',
-    },
-    iconButton: {
-        backgroundColor: 'transparent',
-    },
-});
+const db = SQLite.openDatabaseSync("to-do.sqlite");
+
+
+export function Contato(props: _propsContato) {
+
+
+    const navigation = useNavigation();
+
+    const { dados } = props;
+
+
+    const deletar = async () => {
+
+        Alert.alert(
+
+            "Confirmar exclusão",
+
+            `Deseja realmente excluir o contato "${dados.nome}"?`,
+
+            [
+
+                {
+
+                    text: "Cancelar",
+
+                    style: "cancel"
+
+                },
+
+                {
+
+                    text: "Sim",
+
+                    onPress: async () => {
+
+                        await db.runAsync(`DELETE FROM contatos WHERE id = ?`, dados.id);
+
+                        props.recarregar();
+
+                    }
+
+                }
+
+            ]
+
+        );
+
+    };
+
+
+    const ligar = () => {
+
+        Linking.openURL(`tel:${dados.numero}`);
+
+    };
+
+
+
+    return <>
+
+        <View style={{ display: 'flex', flexDirection: 'row', width: '100%', padding: 20, borderWidth: 1, borderColor: 'rgb(201, 201, 201)', borderRadius: 10, marginBottom: 10 }}>
+
+            <View style={{ width: '50%', alignItems: 'center', justifyContent: 'center' }}>
+
+                <Text style={{ fontFamily: 'Poppins-Bold' }}>
+
+                    {dados.nome}
+
+                </Text>
+
+                <Text style={{ fontFamily: 'Poppins-Medium' }}>
+
+                    {dados.numero}
+
+                </Text>
+
+            </View>
+
+
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '50%', gap: 15 }}>
+
+                <TouchableOpacity style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#25D366', padding: 5, alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 5 }} onPress={ligar}>
+
+                    <FontAwesome name="phone" size={18} color="white" />
+
+                    <Text style={{ color: '#ffffff' }}>Ligar</Text>
+
+                </TouchableOpacity>
+
+                <TouchableOpacity
+
+                    style={{ borderColor: "#000000", borderWidth: 0.5, padding: 5, borderRadius: 5 }}
+
+                    onPress={() => {
+
+                        navigation.navigate('TelaEditar', {
+
+                            db: db,
+
+                            dados: dados,
+
+                            recarregar: props.recarregar
+
+                        });
+
+                    }}
+
+                >
+
+                    <FontAwesome name="pencil-square-o" size={18} color="black" />
+
+                </TouchableOpacity>
+
+                <TouchableOpacity style={{ borderColor: "#000000", borderWidth: 0.5, padding: 5, borderRadius: 5 }} onPress={deletar}>
+
+                    <FontAwesome name="trash-o" size={18} color="black" />
+
+                </TouchableOpacity>
+
+            </View>
+
+        </View>
+
+    </>
+
+} 
